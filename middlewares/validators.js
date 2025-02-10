@@ -1,6 +1,6 @@
 import { body } from "express-validator"
 import { validateErrors } from "./validate.errors.js"
-import { existEmail, existCourse } from "../utils/db.validators.js"
+import { existEmail, existCourse, validateField } from "../utils/db.validators.js"
 
 export const registerValidatior = [
     body('name', 'Name cannot be empty')
@@ -42,5 +42,18 @@ export const newCourse = [
     body('teacher', 'Teacher cannot be empty')
         .notEmpty()
         .isMongoId().withMessage('Teacher id must be valid'),
+    validateErrors
+]
+
+export const updateCourses = [
+    body('title', 'Title cannot be empty')
+        .optional()
+        .notEmpty(),
+    body('description', 'Description cannot be empty')
+        .optional()
+        .notEmpty(),
+    body('teacher')
+        .optional()
+        .custom(validateField),
     validateErrors
 ]

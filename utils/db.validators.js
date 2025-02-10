@@ -17,3 +17,15 @@ export const existCourse = async(title, course)=> {
         throw new Error(`Course ${title} is already taken`)
     }
 }
+
+export const validateField = (field, value) => {
+    if (field) {
+        throw new Error(`${field} is not required`);
+    }
+
+    if (value) {
+        throw new Error('Teacher cannot be modified');
+    }
+
+    return true;
+};
