@@ -17,10 +17,10 @@ const courseSchema = Schema(
             ref: 'User',
             required: [true, 'There should be one teacher in charge per course']
         },
-        students: {
+        students: [{
             type: Schema.Types.ObjectId,
             ref: 'User'
-        }
+        }]
     }
 )
 

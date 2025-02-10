@@ -6,6 +6,7 @@ import helmet from 'helmet'
 import cors from 'cors'
 import authRoutes from '../src/auth/auth.routes.js'
 import coursesRoutes from '../src/course/course.routes.js'
+import enrollmentRoutes from '../src/enrollment/enrollment.routes.js'
 
 const configs = (app)=> {
     app.use(express.json())
@@ -19,6 +20,7 @@ const configs = (app)=> {
 const routes = (app)=> {
     app.use('/v1/schoolSystem', authRoutes)
     app.use('/v1/courses', coursesRoutes)
+    app.use('/v1/courses/enrollment/STU', enrollmentRoutes)
 }
 
 export const initServer = ()=> {
