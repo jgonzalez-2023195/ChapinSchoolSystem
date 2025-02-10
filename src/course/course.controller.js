@@ -46,6 +46,7 @@ export const getCoursesByTeacher = async (req, res) => {
         if (role !== 'TEACHER_ROLE') {
             return res.status(403).send({ message: 'Access denied: the user is not a teacher' })
         }
+
         const courses = await Course.find({ teacher: teacher })
         if(courses.length === 0) return res.status(404).send({message: 'You have not been assigned to a course'})
             return res.status(200).send({message: 'The courses you are in charge of are: ', courses})
@@ -61,68 +62,72 @@ export const getCoursesByTeacher = async (req, res) => {
     }
 }
 
-// Inscribirse en un curso
-export const enrollInCourse = async (req, res) => {
-    const { courseId } = req.params;
-    const studentId = req.user._id; // Asumiendo que el ID del estudiante está en el token de usuario
-
+export const updateCourse = async(req, res)=> {
     try {
-        const course = await Course.findById(courseId);
-        if (!course) {
-            return res.status(404).json({ message: 'Course not found' });
+        let id = req.params.id
+        let data = req.body
+        const teacher = req.user.uid
+        const role = await getUser(teacher)
+        
+        if (role !== 'TEACHER_ROLE') {
+            return res.status(403).send({ message: 'Access denied: the user is not a teacher' })
         }
 
-        // Verificar si el estudiante ya está inscrito
-        if (course.students.includes(studentId)) {
-            return res.status(400).json({ message: 'Already enrolled in this course' });
-        }
+        let updateCourse = await Course.findByIdAndUpdate(id, data, {new: true})
+        if(!updateCourse) return res.status(400).send({message: 'Course not found, course not update'})
 
-        // Inscribir al estudiante
-        course.students.push(studentId);
-        await course.save();
+        /* 
+        const students = await User.find({ role: 'STUDENT_ROLE', courses: id });
 
-        res.json({ message: 'Enrollment successful', course });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error enrolling in course' });
+        if (students.length > 0) {
+            students.forEach(async (student) => {
+                await User.updateOne(
+                    { _id: student._id },
+                    { $set: { 'courses.$[course].title': updatedCourse.title, 'courses.$[course].description': updatedCourse.description } },
+                    { arrayFilters: [{ 'course._id': id }] }
+                );
+            });
+        } */
+
+            return res.status(200).send({message: 'Course updated succesfully', updateCourse})
+    } catch (e) {
+        console.error('General error', e);
+        return res.status(500).send(
+            {
+                success: false,
+                message: 'General error',
+                e
+            }
+        )
     }
-};
+}
 
-// Obtener cursos en los que está inscrito un estudiante
-export const getEnrolledCourses = async (req, res) => {
-    const studentId = req.user._id; // Asumiendo que el ID del estudiante está en el token de usuario
-
+export const deletedCourse = async(req, res) => {
     try {
-        const courses = await Course.find({ students: studentId });
-        res.json(courses);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error fetching enrolled courses' });
-    }
-};
-
-export const unenrollFromCourse = async (req, res) => {
-    const { courseId } = req.params;
-    const studentId = req.user._id; // Asumiendo que el ID del estudiante está en el token de usuario
-
-    try {
-        const course = await Course.findById(courseId);
-        if (!course) {
-            return res.status(404).json({ message: 'Course not found' });
+        let id = req.params.id
+        const teacher = req.user.uid
+        const role = await getUser(teacher)
+        
+        if (role !== 'TEACHER_ROLE') {
+            return res.status(403).send({ message: 'Access denied: the user is not a teacher' })
         }
 
-        // Verificar si el estudiante está inscrito
-        if (!course.students.includes(studentId)) {
-            return res.status(400).json({ message: 'Not enrolled in this course' });
-        }
+        /* const students = await User.find({ role: 'STUDENT_ROLE', courses: id }); // Solo estudiantes con este curso
+        students.forEach(async (student) => {
+            await User.updateOne({ _id: student._id }, { $unset: { courses: "" } });
+        }); */
 
-        // Cancelar inscripción
-        course.students.pull(studentId);
-        await course.save();
-
-        res.json({ message: 'Unenrollment successful', course });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error unenrolling from course' });
+        let courses = await Course.findByIdAndDelete(id)
+        if(!courses) return res.status(404).send({message: 'Course not found, course not deleted'})
+            return res.status(200).send({message: 'Deleted course for sistem', courses})
+    } catch (e) {
+        console.error('General error', e);
+        return res.status(500).send(
+            {
+                success: false,
+                message: 'General error',
+                e
+            }
+        )
     }
 }
